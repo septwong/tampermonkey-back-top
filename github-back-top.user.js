@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub Back to Top
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  为GitHub添加平滑返回顶部按钮
 // @author       sept
 // @match        https://github.com/*
@@ -24,15 +24,18 @@
     backToTopBtn.style.width = '40px';
     backToTopBtn.style.height = '40px';
     backToTopBtn.style.borderRadius = '50%';
-    backToTopBtn.style.backgroundColor = '#238636';
+    backToTopBtn.style.background = 'linear-gradient(135deg, #238636, #2ea043)';
     backToTopBtn.style.color = 'white';
     backToTopBtn.style.display = 'flex';
     backToTopBtn.style.justifyContent = 'center';
     backToTopBtn.style.alignItems = 'center';
     backToTopBtn.style.cursor = 'pointer';
-    backToTopBtn.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+    backToTopBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
     backToTopBtn.style.opacity = '0';
-    backToTopBtn.style.transition = 'opacity 0.3s';
+    backToTopBtn.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    backToTopBtn.style.transform = 'translateY(10px)';
+    backToTopBtn.style.fontSize = '20px';
+    backToTopBtn.style.fontWeight = 'bold';
     backToTopBtn.style.zIndex = '9999';
 
     // 添加按钮到页面
@@ -47,8 +50,24 @@
         }
     });
 
+    // 悬停效果
+    backToTopBtn.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(0) scale(1.1)';
+        this.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+    });
+    
+    backToTopBtn.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(10px) scale(1)';
+        this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+    });
+
     // 点击事件 - 平滑滚动
     backToTopBtn.addEventListener('click', function() {
+        this.style.transform = 'translateY(0) scale(0.9)';
+        setTimeout(() => {
+            this.style.transform = 'translateY(0) scale(1.1)';
+        }, 100);
+        
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
