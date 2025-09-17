@@ -100,7 +100,7 @@
     backToTopBtn.style.left = `${savedPosition.left}px`;
 
     // 滚动事件监听
-    window.addEventListener('scroll', function() {
+    window.addEventListener('scroll', function () {
         if (window.pageYOffset > 300) {
             backToTopBtn.classList.add('visible');
         } else {
@@ -149,7 +149,7 @@
     });
 
     // 点击事件 - 平滑滚动
-    backToTopBtn.addEventListener('click', function() {
+    backToTopBtn.addEventListener('click', function () {
         if (!hasDragged) {
             window.scrollTo({
                 top: 0,
