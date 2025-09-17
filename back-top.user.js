@@ -14,11 +14,12 @@
 // @updateURL https://update.greasyfork.org/scripts/532058/GitHub%20Back%20to%20Top.meta.js
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     const HOSTNAME = window.location.hostname;
     const ENABLED_SITES_KEY = 'back-to-top-enabled-sites';
+    const BUTTON_POSITION_KEY = 'back-to-top-button-position';
 
     // 获取已启用的网站列表，默认为 a list of 'github.com'
     let enabledSites = GM_getValue(ENABLED_SITES_KEY, ['github.com']);
@@ -49,60 +50,111 @@
 
     // 创建按钮元素
     const backToTopBtn = document.createElement('div');
+    backToTopBtn.id = 'gemini-back-to-top-button';
     backToTopBtn.innerHTML = '↑';
-    backToTopBtn.style.position = 'fixed';
-    backToTopBtn.style.right = '20px';
-    backToTopBtn.style.bottom = '20px';
-    backToTopBtn.style.width = '40px';
-    backToTopBtn.style.height = '40px';
-    backToTopBtn.style.borderRadius = '50%';
-    backToTopBtn.style.background = 'linear-gradient(135deg, #238636, #2ea043)';
-    backToTopBtn.style.color = 'white';
-    backToTopBtn.style.display = 'flex';
-    backToTopBtn.style.justifyContent = 'center';
-    backToTopBtn.style.alignItems = 'center';
-    backToTopBtn.style.cursor = 'pointer';
-    backToTopBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-    backToTopBtn.style.opacity = '0';
-    backToTopBtn.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-    backToTopBtn.style.transform = 'translateY(10px)';
-    backToTopBtn.style.fontSize = '20px';
-    backToTopBtn.style.fontWeight = 'bold';
-    backToTopBtn.style.zIndex = '9999';
 
-    // 添加按钮到页面
+    // 创建样式
+    const style = document.createElement('style');
+    style.textContent = `
+        #gemini-back-to-top-button {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #238636, #2ea043);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: grab;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            font-size: 20px;
+            font-weight: bold;
+            z-index: 9999;
+        }
+
+        #gemini-back-to-top-button.visible {
+            opacity: 1;
+        }
+
+        #gemini-back-to-top-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+        }
+
+        #gemini-back-to-top-button:active {
+            cursor: grabbing;
+            transform: scale(0.9);
+        }
+    `;
+
+    // 添加样式和按钮到页面
+    document.head.appendChild(style);
     document.body.appendChild(backToTopBtn);
+
+    // 加载保存的位置
+    const savedPosition = GM_getValue(BUTTON_POSITION_KEY, { top: window.innerHeight - 60, left: window.innerWidth - 60 });
+    backToTopBtn.style.top = `${savedPosition.top}px`;
+    backToTopBtn.style.left = `${savedPosition.left}px`;
 
     // 滚动事件监听
     window.addEventListener('scroll', function() {
         if (window.pageYOffset > 300) {
-            backToTopBtn.style.opacity = '1';
+            backToTopBtn.classList.add('visible');
         } else {
-            backToTopBtn.style.opacity = '0';
+            backToTopBtn.classList.remove('visible');
         }
     });
 
-    // 悬停效果
-    backToTopBtn.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(0) scale(1.1)';
-        this.style.boxShadow = '0 6px 16px rgba(0,0,0,0.2)';
+    let isDragging = false;
+    let hasDragged = false;
+    let offsetX, offsetY;
+
+    backToTopBtn.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        hasDragged = false;
+        offsetX = e.clientX - backToTopBtn.getBoundingClientRect().left;
+        offsetY = e.clientY - backToTopBtn.getBoundingClientRect().top;
+        backToTopBtn.style.transition = 'none'; // Disable transition during drag
     });
-    
-    backToTopBtn.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(10px) scale(1)';
-        this.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            hasDragged = true;
+            let newTop = e.clientY - offsetY;
+            let newLeft = e.clientX - offsetX;
+
+            // Constrain to viewport
+            newTop = Math.max(0, Math.min(newTop, window.innerHeight - backToTopBtn.offsetHeight));
+            newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - backToTopBtn.offsetWidth));
+
+            backToTopBtn.style.top = `${newTop}px`;
+            backToTopBtn.style.left = `${newLeft}px`;
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isDragging) {
+            isDragging = false;
+            backToTopBtn.style.transition = 'opacity 0.3s, transform 0.3s'; // Re-enable transition
+            if (hasDragged) {
+                GM_setValue(BUTTON_POSITION_KEY, {
+                    top: backToTopBtn.offsetTop,
+                    left: backToTopBtn.offsetLeft
+                });
+            }
+        }
     });
 
     // 点击事件 - 平滑滚动
     backToTopBtn.addEventListener('click', function() {
-        this.style.transform = 'translateY(0) scale(0.9)';
-        setTimeout(() => {
-            this.style.transform = 'translateY(0) scale(1.1)';
-        }, 100);
-        
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
+        if (!hasDragged) {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
     });
 })();
