@@ -1,3 +1,4 @@
-# tampermonkey-github-back-top
-Used to return the Tampermonkey script at the top of GitHub
-> 用于返回GitHub顶部的Tampermonkey脚本
+# tampermonkey-back-top
+
+Tampermonkey script used to return to the top of a webpage
+> 用于返回网页顶部的Tampermonkey脚本
