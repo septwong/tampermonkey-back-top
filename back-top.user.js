@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Back to Top
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.5
 // @description  为网页添加平滑返回顶部按钮
 // @author       sept
 // @match        *://*/*
@@ -94,10 +94,33 @@
     document.head.appendChild(style);
     document.body.appendChild(backToTopBtn);
 
-    // 加载保存的位置
-    const savedPosition = GM_getValue(BUTTON_POSITION_KEY, { top: window.innerHeight - 60, left: window.innerWidth - 60 });
-    backToTopBtn.style.top = `${savedPosition.top}px`;
-    backToTopBtn.style.left = `${savedPosition.left}px`;
+    function applyPosition(position) {
+        let top, left;
+
+        const buttonWidth = 40;
+        const buttonHeight = 40;
+
+        if (position.pctTop !== undefined && position.pctLeft !== undefined) {
+            top = position.pctTop * (window.innerHeight - buttonHeight);
+            left = position.pctLeft * (window.innerWidth - buttonWidth);
+        } else if (position.top !== undefined && position.left !== undefined) {
+            top = position.top;
+            left = position.left;
+        } else {
+            return;
+        }
+
+        top = Math.max(0, Math.min(top, window.innerHeight - buttonHeight));
+        left = Math.max(0, Math.min(left, window.innerWidth - buttonWidth));
+
+        backToTopBtn.style.top = `${top}px`;
+        backToTopBtn.style.left = `${left}px`;
+    }
+
+    const defaultPosition = { pctTop: 0.9, pctLeft: 0.9 };
+    const savedPosition = GM_getValue(BUTTON_POSITION_KEY, defaultPosition);
+    applyPosition(savedPosition);
+
 
     // 滚动事件监听
     window.addEventListener('scroll', function () {
@@ -106,6 +129,12 @@
         } else {
             backToTopBtn.classList.remove('visible');
         }
+    });
+
+    // 窗口大小调整事件监听
+    window.addEventListener('resize', () => {
+        const pos = GM_getValue(BUTTON_POSITION_KEY, defaultPosition);
+        applyPosition(pos);
     });
 
     let isDragging = false;
@@ -140,9 +169,12 @@
             isDragging = false;
             backToTopBtn.style.transition = 'opacity 0.3s, transform 0.3s'; // Re-enable transition
             if (hasDragged) {
+                const pctTop = backToTopBtn.offsetTop / (window.innerHeight - backToTopBtn.offsetHeight);
+                const pctLeft = backToTopBtn.offsetLeft / (window.innerWidth - backToTopBtn.offsetWidth);
+
                 GM_setValue(BUTTON_POSITION_KEY, {
-                    top: backToTopBtn.offsetTop,
-                    left: backToTopBtn.offsetLeft
+                    pctTop: Math.max(0, Math.min(1, pctTop)),
+                    pctLeft: Math.max(0, Math.min(1, pctLeft)),
                 });
             }
         }
