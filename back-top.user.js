@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Back to Top
 // @namespace    http://tampermonkey.net/
-// @version      0.6
+// @version      0.7
 // @description  为网页添加平滑返回顶部按钮
 // @author       sept
 // @match        *://*/*
@@ -16,6 +16,11 @@
 
 (function () {
     'use strict';
+
+    if (window.self !== window.top || window.myBackToTopScriptHasRun) {
+        return;
+    }
+    window.myBackToTopScriptHasRun = true;
 
     const HOSTNAME = window.location.hostname;
     const ENABLED_SITES_KEY = 'back-to-top-enabled-sites';
@@ -121,6 +126,30 @@
     const savedPosition = GM_getValue(BUTTON_POSITION_KEY, defaultPosition);
     applyPosition(savedPosition);
 
+    function smoothScrollTo(targetY, duration) {
+        const startY = window.pageYOffset;
+        const distance = targetY - startY;
+        let startTime = null;
+
+        function animation(currentTime) {
+            if (startTime === null) startTime = currentTime;
+            const timeElapsed = currentTime - startTime;
+            const run = ease(timeElapsed, startY, distance, duration);
+            window.scrollTo(0, run);
+            if (timeElapsed < duration) requestAnimationFrame(animation);
+        }
+
+        // easeInOutQuad easing function
+        function ease(t, b, c, d) {
+            t /= d / 2;
+            if (t < 1) return c / 2 * t * t + b;
+            t--;
+            return -c / 2 * (t * (t - 2) - 1) + b;
+        }
+
+        requestAnimationFrame(animation);
+    }
+
 
     // 滚动事件监听
     window.addEventListener('scroll', function () {
@@ -192,10 +221,7 @@
     // 点击事件 - 平滑滚动
     backToTopBtn.addEventListener('click', function () {
         if (!hasDragged) {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            smoothScrollTo(0, 300);
         }
     });
 })();
