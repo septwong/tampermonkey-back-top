@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Back to Top
 // @namespace    http://tampermonkey.net/
-// @version      0.5
+// @version      0.6
 // @description  为网页添加平滑返回顶部按钮
 // @author       sept
 // @match        *://*/*
@@ -139,11 +139,13 @@
 
     let isDragging = false;
     let hasDragged = false;
-    let offsetX, offsetY;
+    let offsetX, offsetY, startX, startY;
 
     backToTopBtn.addEventListener('mousedown', (e) => {
         isDragging = true;
         hasDragged = false;
+        startX = e.clientX;
+        startY = e.clientY;
         offsetX = e.clientX - backToTopBtn.getBoundingClientRect().left;
         offsetY = e.clientY - backToTopBtn.getBoundingClientRect().top;
         backToTopBtn.style.transition = 'none'; // Disable transition during drag
@@ -151,16 +153,23 @@
 
     document.addEventListener('mousemove', (e) => {
         if (isDragging) {
-            hasDragged = true;
-            let newTop = e.clientY - offsetY;
-            let newLeft = e.clientX - offsetX;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            if (Math.sqrt(dx * dx + dy * dy) > 5) {
+                hasDragged = true;
+            }
 
-            // Constrain to viewport
-            newTop = Math.max(0, Math.min(newTop, window.innerHeight - backToTopBtn.offsetHeight));
-            newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - backToTopBtn.offsetWidth));
+            if (hasDragged) {
+                let newTop = e.clientY - offsetY;
+                let newLeft = e.clientX - offsetX;
 
-            backToTopBtn.style.top = `${newTop}px`;
-            backToTopBtn.style.left = `${newLeft}px`;
+                // Constrain to viewport
+                newTop = Math.max(0, Math.min(newTop, window.innerHeight - backToTopBtn.offsetHeight));
+                newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - backToTopBtn.offsetWidth));
+
+                backToTopBtn.style.top = `${newTop}px`;
+                backToTopBtn.style.left = `${newLeft}px`;
+            }
         }
     });
 
