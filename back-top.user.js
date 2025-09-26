@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Back to Top
 // @namespace    http://tampermonkey.net/
-// @version      0.7
+// @version      0.8
 // @description  为网页添加平滑返回顶部按钮
 // @author       sept
 // @match        *://*/*
@@ -24,7 +24,7 @@
 
     const HOSTNAME = window.location.hostname;
     const ENABLED_SITES_KEY = 'back-to-top-enabled-sites';
-    const BUTTON_POSITION_KEY = 'back-to-top-button-position';
+    const BUTTON_POSITION_KEY = `back-to-top-button-position_${HOSTNAME}`;
 
     // 获取已启用的网站列表，默认为 a list of 'github.com'
     let enabledSites = GM_getValue(ENABLED_SITES_KEY, ['github.com']);
