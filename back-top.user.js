@@ -90,7 +90,7 @@
         }
 
         #gemini-back-to-top-button:active {
-            cursor: grabbing;
+            cursor: pointer;
             transform: scale(0.9);
         }
     `;
