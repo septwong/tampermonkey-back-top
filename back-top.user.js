@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Back to Top
 // @namespace    http://tampermonkey.net/
-// @version      0.8
+// @version      0.9
 // @description  为网页添加平滑返回顶部按钮
 // @author       sept
 // @match        *://*/*
