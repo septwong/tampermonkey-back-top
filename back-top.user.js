@@ -71,7 +71,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            cursor: grab;
+            cursor: pointer;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             opacity: 0;
             transition: opacity 0.3s, transform 0.3s;
